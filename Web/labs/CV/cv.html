@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--Validator asks for a lang attribute in the html tag-->
+<html lang="en">
+<head>
+	<title>Antoine's CV</title>
+	<meta charset="utf-8"/>
+	<!--Link to the outside stylesheet-->
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<script src="script.js"></script>
+</head>
+<body>
+	<main>
+	<!--On délimite le contenu du cv dans une balise article,
+	ce qui permet de le différencier d'éventuels footer, header
+	et barre de navigation qui seraient propres au site-->
+	<article>
+		<header>
+			<h1>Antoine Cremel</h1>
+			<img src="portrait.jpg" alt="Photo de profil"/>
+			<ul>
+				<li>23 ans</li>
+				<li>31 rue Claude Bernard
+					75005 Paris</li>
+				<li>06 84 08 36 08</li>
+				<li>antoine.cremel@protonmail.com</li>
+			</ul>
+
+		</header>
+
+		<!-- Zone de navigation qui lie à chaque partie du CV-->
+		<nav>
+			<ul>
+				<li><a href="#education">Education</a></li>
+				<li><a href="#employment_history">Employment history</a></li>
+				<li><a href="#education_abroad">Education abroad</a></li>
+				<li><a href="#hobbies">Hobbies</a></li>
+				<li><a href="#contact_me">Contact me</a></li>
+				<li><a href="#add_exp">Add professional experience</a></li>
+			</ul>
+		</nav>
+
+		<!-- This article is divided into sections-->
+		<section id="education">
+			<!-- Each section is headlined by a h2 title-->
+			<h2 onclick="closeSection('education');">Education</h2>
+			
+			<!-- This section lists my education in chronological
+			order, so using an ordered list here makes sense-->
+			<ol>
+				<li>High school and middle school at Lycée Lavoisier</li>
+				<li>High school degree majoring in mathematics</li>
+				<li>First year of bachelor at EPFL</li>
+				<li>Currently in 4th year at ECE</li>
+			</ol>
+		</section>
+
+		<section id="employment_history">
+			<h2 onclick="closeSection('employment_history');">Employment history</h2>
+			<!--On this section, each item on the list has an
+			internal "title" section, so it makes sense to
+			use a dl tag.-->
+			<dl id="emp_list">
+				<dt>July-August 2017, December 2017-February 2018 :</dt>
+				<dd>Internships among the Data Science team of FPE (Compte Nickel). Writing of scripts, statistical analysis.</dd>
+				<dt>5 weeks internship at Paul Beuscher</dt>
+				<dd> Piano shop</dd>
+				<dt>6 weeks internship at Evergig</dt>
+				<dd>Website for hosting and creating concert videos</dd>
+			</dl>
+		</section>
+
+		<section id="education_abroad">
+			<h2 onclick="closeSection('education_abroad');">Education abroad</h2>
+			<ul>
+				<li>Exchange semester at Malmö University</li>
+				<li>Summer Session at Berklee College of Music, Boston MA</li>
+			</ul>
+		</section>
+
+		<section id="hobbies">
+			<h2 onclick="closeSection('hobbies');">Hobbies</h2>
+			<!--This table contains some headers to define the kind
+			of hobby we are talking about-->
+			<table>
+				<tr>
+					<th>Music</th>
+					<th>Sports</th>
+				</tr>
+				<tr>
+					<td>Composition</td>
+					<td>Krav Maga</td>
+				</tr>
+				<tr>
+					<td>Band Practice</td>
+					<td>Running</td>
+				</tr>
+			</table>
+		</section>
+		<section id="contact_me">
+			<!-- Contact me section to demonstrate pop ups-->
+			<h2 onclick="closeSection('contact_me');">Contact me :</h2>
+			<!--Contact form-->
+			<form>
+				<label for="mail">Addresse mail :</label>
+				<input type="text" name="Addresse_mail" id="mail"/>
+				<label for="message">Message :</label>
+				<textarea rows="5" name="message" id="message"></textarea>
+				<!-- The submit button is a regular button to not
+					cause the page to reload-->
+				<input type="button" name="submit" value="Submit" onclick="clickSubmit();"/>
+			</form>
+		</section>
+		<section id="add_exp">
+			<!--Section to add a professional experience via a form-->
+			<h2 onclick="closeSection('add_exp');">Add professional experience</h2>
+			<form>
+				<label for="job_start">Start : </label>
+				<input type="text" name="job_start" id="job_start"/>
+				<label for="job_end">End : </label>
+				<input type="text" name="job_end" id="job_end"/>
+				<label for="job_description">Description : </label>
+				<textarea rows="5" name ="job_descr" id="job_description"></textarea>
+				<input type="button" name="submit" value="Submit" onclick="addJob();"/>
+			</form>
+		</section>
+	</article>
+	</main>
+</body>
+</html>

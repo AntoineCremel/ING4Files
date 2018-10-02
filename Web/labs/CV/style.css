@@ -1,0 +1,77 @@
+/*
+	This page will try to emulate the look of a console window
+	while remaining pleasing to the eye and readable
+*/
+
+body{
+	/* Color definition*/
+	background-color: rgb(20, 20, 20);
+	color: rgb(220, 220, 220);
+}
+main{
+	/* Centrage du contenu */
+	max-width: 500px;
+	margin: auto;
+	/* Définition du style de police utilisée*/
+	font-family: Hack, Consolas, monospace;
+}
+/* Putting the header on a grid to make it more compact and save the 
+blank space to the left of the picture */
+header{
+	display: grid;
+	grid:
+		'header header'
+		'left right';
+}
+header img{
+	width: 100px;
+	grid-area: left;
+}
+header ul{
+	grid-area: right;
+}
+header h1{
+	grid-area: header;
+}
+
+section{
+	/*Definition of section borders*/
+	border-top: 1px dashed rgb(220,220,220);
+}
+
+td{
+	padding: 0px 50px;
+}
+a{
+	color: rgb(51, 204, 51);
+}
+ul{
+	list-style: square;
+}
+
+/* The forms should not remain a white zone in this beautiful sea of
+blackness*/
+label{
+	padding: 8px 8px 8px 0;
+	display: inline-block;
+}
+input, textarea{
+	padding: 8px;
+	margin: 8px;
+	border: 1px dashed rgb(51, 204, 51);
+	border-radius: 4px;
+	background-color: rgb(50, 50, 50);
+	color: rgb(220, 200, 220);
+}
+input[type=text], textarea{
+	width: 100%;
+	
+}
+input[type=button]{
+	font-weight: bold;
+}
+
+/* Definition of a class that is hidden */
+.hidden{
+	display: none;
+}
