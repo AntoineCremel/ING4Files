@@ -41,6 +41,7 @@ int main(int argc, char **argv) {
 		because we changed it in the shared memory, whereas the i was only 
 		changed locally in the child */
 		printf("Value of *ptr = %d\nValue of i = %d\n", *ptr, i);
+		// Remove the shared memory segment
 		shmctl(id, IPC_RMID, NULL);
 	}
 }
