@@ -84,6 +84,19 @@ select 'Query 08' as '';
 select 'Query 09' as '';
 -- the name of the pilots who can only fly aircrafts whith cruising range greater than 1,000 miles
 -- le noms des pilotes qui ne peuvent piloter que des avions avec un rayon d'actions supérieur à 1 000 miles
+-- Find all employees which are not in the following list :
+select ename from EMPLOYEES left outer join
+	(-- Find all pilots who can fly an aircraft of range less than 1,000
+	select eid from EMPLOYEES natural join CERTIFIED natural join(
+		-- Find aircrafts whose cruisingrange is less than or equal to 1,000
+		select aid from AIRCRAFTS where cruisingrange <= 1000) as shortrange
+	group by eid) as shortPilots
+on EMPLOYEES.eid = shortPilots.eid
+-- Make sure said employees are pilots
+inner join CERTIFIED on EMPLOYEES.eid = CERTIFIED.eid
+-- Only take the pilots who are not results from the subquery, ie pilots who are not
+-- capable of flying a short range plane
+where shortPilots.eid is null group by EMPLOYEES.ename;
 
 
 select 'Query 10' as '';
@@ -93,8 +106,11 @@ select 'Query 10' as '';
 
 select 'Query 11' as '';
 -- the name of the pilots who can fly aircrafts with cruising range over 1,000 miles and who can fly a Boeing
--- le nom des pilotes qui peuvent piloter des avions avec un rayon d'action supérieur à 1 000 miles et un Boeing 
-
+-- le nom des pilotes qui peuvent piloter des avions avec un rayon d'action supérieur à 1 000 miles et un Boeing
+select ename from EMPLOYEES natural join CERTIFIED natural join (
+	-- Find all aircrafts id with cruising range over 1,000 miles or who are Boeings
+	select aid from AIRCRAFTS where cruisingrange > 1000 or aname like '%Boeing%') as planes
+group by ename;
 
 select 'Query 12' as '';
 -- the ID of the aircrafts that can be used on all flights from Los Angeles to Chicago (distance VS cruising range comparision)
@@ -104,7 +120,10 @@ select 'Query 12' as '';
 select 'Query 13' as '';
 -- the name of the pilots who cannot fly any Boeing aircraft
 -- le nom des pilotes qui ne peuvent pas piloter un avion boeing
-
+-- Select all pilots who can fly one of though
+select eid from EMPLOYEES natural join CERTIFIED natural join (
+-- Select all Boeing plane ids
+select aid from AIRCRAFTS where aname like '%Boeing%') as Boeings;
 
 select 'Query 14' as '';
 -- the name of the pilots who can fly a Boeing aircraft (at least)

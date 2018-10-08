@@ -1,9 +1,9 @@
 USE ML1;
 
---drop table CERTIFIED;
---drop table EMPLOYEES;
---drop table AIRCRAFTS;
---drop table FLIGHTS;
+-- drop table CERTIFIED;
+-- drop table EMPLOYEES;
+-- drop table AIRCRAFTS;
+-- drop table FLIGHTS;
 
 
 create table FLIGHTS (
