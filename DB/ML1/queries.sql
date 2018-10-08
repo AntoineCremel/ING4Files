@@ -120,10 +120,19 @@ select 'Query 12' as '';
 select 'Query 13' as '';
 -- the name of the pilots who cannot fly any Boeing aircraft
 -- le nom des pilotes qui ne peuvent pas piloter un avion boeing
--- Select all pilots who can fly one of though
-select eid from EMPLOYEES natural join CERTIFIED natural join (
--- Select all Boeing plane ids
-select aid from AIRCRAFTS where aname like '%Boeing%') as Boeings;
+-- Select all pilots who are not capable of flying a Boeing
+select EMPLOYEES.ename from EMPLOYEES 
+-- Make sure we are only talking about pilots
+natural join CERTIFIED
+left outer join (
+	-- Select all pilots who can fly one of those
+	select eid from EMPLOYEES natural join CERTIFIED natural join (
+	-- Select all Boeing plane ids
+		select aid from AIRCRAFTS where aname like '%Boeing%') as Boeings
+	group by eid) as boeingFlyers
+on boeingFlyers.eid = EMPLOYEES.eid
+-- where boeingFlyers.eid = null
+group by ename;
 
 select 'Query 14' as '';
 -- the name of the pilots who can fly a Boeing aircraft (at least)
