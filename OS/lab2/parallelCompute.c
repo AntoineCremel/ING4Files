@@ -10,7 +10,7 @@ pthread_mutex_t sum;
 void * addition(void * params){
 	int * param = (int *)params;
 
-	printf("I am a thread, here is my result : %i", param[0]+param[1]);
+	printf("I am a thread, here is my result : %i\n", param[0]+param[1]);
 
 	pthread_mutex_lock(&sum);
 	result += param[0]+param[1];
@@ -44,7 +44,7 @@ int main(int argc, char **argv){
 	pthread_join(operations[0], &status);
 	pthread_join(operations[1], &status);
 
-	printf("The result is : %i",  result);
+	printf("The result is : %i\n",  result);
 
 	return 0;
 }
