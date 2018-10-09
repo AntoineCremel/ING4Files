@@ -121,18 +121,18 @@ select 'Query 13' as '';
 -- the name of the pilots who cannot fly any Boeing aircraft
 -- le nom des pilotes qui ne peuvent pas piloter un avion boeing
 -- Select all pilots who are not capable of flying a Boeing
-select EMPLOYEES.ename from EMPLOYEES 
+select EMPLOYEES.ename as name from EMPLOYEES 
 -- Make sure we are only talking about pilots
 natural join CERTIFIED
 left outer join (
 	-- Select all pilots who can fly one of those
-	select eid from EMPLOYEES natural join CERTIFIED natural join (
+	select eid, ename from EMPLOYEES natural join CERTIFIED natural join (
 	-- Select all Boeing plane ids
 		select aid from AIRCRAFTS where aname like '%Boeing%') as Boeings
-	group by eid) as boeingFlyers
+	group by eid, ename) as boeingFlyers
 on boeingFlyers.eid = EMPLOYEES.eid
--- where boeingFlyers.eid = null
-group by ename;
+where boeingFlyers.ename is null
+group by EMPLOYEES.ename;
 
 select 'Query 14' as '';
 -- the name of the pilots who can fly a Boeing aircraft (at least)
@@ -142,7 +142,17 @@ select 'Query 14' as '';
 select 'Query 15' as '';
 -- the name of the pilots who can only fly Boeing aircrafts
 -- le nom des pilotes qui ne peuvent piloter que des avions Boeing
-
+-- List the name of pilots
+select ename from EMPLOYEES natural join CERTIFIED left join (
+	-- List the ids of the pilots who can fly non Boeing aircrafts
+	select eid from EMPLOYEES natural join CERTIFIED
+	natural join (
+		-- List of all the Boeing aricraft
+		select aid from AIRCRAFTS where aname not like '%Boeing%') as notBoeing
+	group by eid) as nonBoeingPilots
+on EMPLOYEES.eid = nonBoeingPilots.eid
+where nonBoeingPilots.eid is null
+group by ename;
 
 select 'Query 16' as '';
 -- the name of the pilots who can fly all the Boeing aircrafts (listed in the database)
@@ -152,7 +162,12 @@ select 'Query 16' as '';
 select 'Query 17' as '';
 -- for each employee, their name, the number of aircrafts he/she can fly, the maximum cruising range of those aircrafts
 -- pour chaque employé, son nom, le nombre d'avions qu'il/elle peut piloter, le rayon d'action maximum de ces avions
-
+-- The name of the employees with the number of aircraft they can fly
+select ename, count(aid) as nbAircrafts, max(AIRCRAFTS.cruisingrange)
+from EMPLOYEES
+natural join CERTIFIED
+natural join AIRCRAFTS
+group by EMPLOYEES.ename;
 
 select 'Query 18' as '';
 -- the name of the pilots who can fly the greatest number of routes (listed in the database)
@@ -162,7 +177,11 @@ select 'Query 18' as '';
 select 'Query 19' as '';
 -- for each aircraft, its name and the routes (origin, destination) it can operate
 -- pour chaque avion, son nom et les trajets (origin, destination) qu'il peut assurer
-
+select aname as planeName, routes.origin as origin, routes.destination as destination from AIRCRAFTS left join (
+	-- Origin, destination, distance from each routes
+	select ORIGIN, DESTINATION, DISTANCE from FLIGHTS) as routes
+on AIRCRAFTS.CRUISINGRANGE >= routes.distance
+order by aname;
 
 select 'Query 20' as '';
 -- the routes (origin, destination) flown by fligths with different distances
