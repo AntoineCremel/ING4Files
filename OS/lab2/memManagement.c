@@ -9,6 +9,15 @@
 #define KEY 4567
 #define PERMS 0660
 
+/* 
+1. From what we understand from the output, we modify i and *ptr in the child
+	process first and print them. In the parent process, we wait for the execution
+	of the child, then we print i and *ptr.
+	Since i was modified into the child process, its value remained unchanged on
+	the output of the main process. However, *ptr is a pointer to a shared memory
+	zone, and therefore its modification has an effect on the parent process.
+*/
+
 int main(int argc, char **argv) {
 	// 0 Variable declaration
 	int id;
