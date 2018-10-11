@@ -34,7 +34,9 @@ int main(int argc, char **argv) {
 		wait(NULL);
 		*ptr = *ptr - result;
 
-		// Print out the result to the user
+		// Print out the result to the screen
+		// Our result should be : 
+		// (1 + 2) - (3 + 4) = 4
 		printf("Le resultat du calcul est : %i\n", *ptr);
 
 		// Free thee zone of shared memory

@@ -61,8 +61,27 @@ group by origin, destination;
 
 select 'Query 06' as '';
 -- all the possibilities (departs, arrives) to go from Madison à New York with at most two changes
--- toutes les possibilités (departs, arrives) pour aller de Madison à New York en au plus deux changements 
-
+-- toutes les possibilités (departs, arrives) pour aller de Madison à New York en au plus deux changements
+select 
+	firstFlight.*,
+	secondFlight.origin, secondFlight.destination, secondFlight.departs as secondDepart, secondFlight.arrives as secondArrive,
+    thirdFlight.*
+from 
+-- Select all flights which leave from Madison
+(select origin, destination, arrives from FLIGHTS where origin = 'Madison') as firstFlight
+left join FLIGHTS as secondFlight 
+on firstFlight.destination = secondFlight.origin
+	and timediff(firstFlight.arrives, secondFlight.departs) <= 0
+left join (
+	-- Select all flights whose destination is New York
+	select origin, destination, departs from FLIGHTS where destination = 'New York') as thirdFlight
+on secondFlight.destination = thirdFlight.origin
+	and timediff(secondFlight.arrives, thirdFlight.departs) <= 0
+    
+-- Check that we do get to New York in the end
+where firstFlight.destination = 'New York'
+	or secondFlight.destination = 'New York'
+    or thirdFlight.destination = 'New York';
 
 select 'Query 07' as '';
 -- the difference between the average salary of pilots and the average salary of employees, including pilots (average(pilot) - average(employees))

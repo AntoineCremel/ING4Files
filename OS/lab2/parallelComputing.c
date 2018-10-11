@@ -50,6 +50,8 @@ int main(int argc, char **argv) {
 
 		*ptr[0] = *ptr[0] + (*ptr[2]);
 
+		// Output the result to the screen. Our operation sums up to :
+		// (1 + 2) * (3 - 4) + (5 + 6) = 8
 		printf("The result of the operation is as follow : %i\n", *ptr[0]);
 
 		for(i=0; i < NB_PROCESSES; i++){
