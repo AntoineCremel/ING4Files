@@ -54,6 +54,7 @@ int main(int argc, char **argv) {
 		// (1 + 2) * (3 - 4) + (5 + 6) = 8
 		printf("The result of the operation is as follow : %i\n", *ptr[0]);
 
+		// Free the shared memory spaces
 		for(i=0; i < NB_PROCESSES; i++){
 			shmctl(id[i], IPC_RMID, NULL);
 		}
