@@ -12,8 +12,8 @@ of the code as required by question 2.
 
 This file contains the code for section 2 of the lab, using shared memmory spaces
 to communicate between processes.
-Synchronization between processes is achieved using 
-```wait(NULL);```
+Synchronization between processes is achieved using
+`wait(NULL);`
 in the parent process to wait for the exectuion of the childs before accessing shared
 memory spaces.
 
