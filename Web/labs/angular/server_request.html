@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Server Request</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<meta charset="utf-8"/>
+</head>
+<body>
+	<div data-ng-app="serverModule" data-ng-controller="readFromServer">
+		<p>The server contains : {{meinKontent}}</p>
+	</div>
+	<script type="text/javascript">
+		var app = angular.module('serverModule', []);
+		app.controller('readFromServer', function($scope, $http) {
+			$http.get("https://falconnet.fr/ECE/api_chat.php?mode=read&repo=66")
+				.then(function(response) {
+					$scope.meinKontent = response.data;
+				});
+		});
+
+		var app = angular.module("shoppingList", []); 
+		app.controller("myCtrl", function($scope) {
+			$scope.products = read;
+			$scope.addItem = function () {
+				$scope.products.push($scope.addMe);
+			}
+			$scope.removeItem = function (x) {
+				$scope.products.splice(x, 1);
+			}
+		});
+	</script>
+</body>
+</html>
