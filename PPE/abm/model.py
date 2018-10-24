@@ -11,4 +11,4 @@ from mesa.model import Model
 
 class World(Model):
 
-	number = 0
+	pass
