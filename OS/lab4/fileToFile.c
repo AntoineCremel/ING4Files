@@ -15,7 +15,9 @@ int main(int argc, char ** argv){
 	dup2(fd2, fileno(stdout));
 
 	char tmp;
-	while (read(fd1, &tmp, 1) == 1) 
+	while (read(fd1, &tmp, 1) == 1)
+		// 1 is the number of stdout in the file description table,
+		// so it is equivalent to fileno(stdout)
 		write(1, &tmp, 1);
 /*
 	if(file1 && file2){

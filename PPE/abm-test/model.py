@@ -3,6 +3,7 @@ import random
 from mesa import Agent, Model
 from mesa.time import RandomActivation
 from mesa.space import MultiGrid
+from mesa.datacollection import DataCollector
 
 class MoneyAgent(Agent):
 	""" An agent with fixed initial wealth"""
@@ -11,15 +12,16 @@ class MoneyAgent(Agent):
 		self.wealth = 1
 
 	def move(self):
-		possible_steps = self.model.grid.get_neightborhood(
+		possible_steps = self.model.grid.get_neighborhood(
 			self.pos,
-			moore = True;
+			moore = True,
 			include_center = False)
 		new_position = random.choice(possible_steps)
 		self.model.grid.move_agent(self, new_position)
 
 	def give_money(self):
-		cellmates = self.model.grid.get_cell_list_contents([self.pos])
+		cellmates = self.model.grid.\
+			get_cell_list_contents([self.pos])
 		if len(cellmates) > 1:
 			other = random.choice(cellmates)
 			other.wealth += 1
@@ -30,6 +32,14 @@ class MoneyAgent(Agent):
 		self.move()
 		if self.wealth > 0:
 			self.give_money()
+
+def compute_gini(model):
+	agent_wealths =\
+		[agent.wealth for agent in model.schedule.agents]
+	x = sorted(agent_wealths)
+	N = model.num_agents
+	B = sum(xi * (N-i) for i, xi in enumerate(x)) / (N*sum(x))
+	return (1 + (1/N) - 2 * B)
 
 class MoneyModel(Model):
 	""" A model with some number of agents"""
@@ -48,9 +58,12 @@ class MoneyModel(Model):
 			y = random.randrange(self.grid.height)
 			self.grid.place_agent(a, (x, y))
 
+		# Create the data collector
+		self.datacollector = DataCollector(
+			model_reporters = {"Gini": compute_gini}, 
+			agent_reporters = {"Wealth": "wealth"})
+
 	""" Define the scheduler for the model"""
 	def step(self):
+		self.datacollector.collect(self)
 		self.schedule.step()
-		# At the end of each steap, print the wealth of each agent
-		for a in self.schedule.agents:
-			print(a.unique_id, " has ", a.wealth, " wealth")
