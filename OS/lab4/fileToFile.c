@@ -12,6 +12,7 @@ int main(int argc, char ** argv){
 	int fd1 = open("text1.txt", O_RDONLY);
 	int fd2 = open("text2.txt", O_CREAT | O_TRUNC | O_WRONLY, 0600);
 
+	// Connect text2 to standard output
 	dup2(fd2, fileno(stdout));
 
 	char tmp;
