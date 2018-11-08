@@ -7,7 +7,9 @@ for i in range(100):
 	model.step()
 
 gini = model.datacollector.get_model_vars_dataframe()
-gini.head()
+gini.plot()
+agent_wealth = model.datacollector.get_agent_vars_dataframe()
+agent_wealth.head()
 
 """
 agent_counts = np.zeros((model.grid.width, model.grid.height))
