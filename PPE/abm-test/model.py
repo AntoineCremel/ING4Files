@@ -47,6 +47,8 @@ class MoneyModel(Model):
 		self.num_agents = N
 		self.grid = MultiGrid(width, height, True)
 		self.schedule = RandomActivation(self)
+		# Attribute for batch runs
+		self.running = True
 
 		# Create N agents
 		for i in range (self.num_agents):
