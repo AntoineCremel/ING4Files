@@ -1,14 +1,8 @@
-#!usr/bin/env python3
+from mesa import Model
 
-'''Environment file
-
-This file contains the definition of the environment.
-It will contain a class inheriting from Model whcich will define
-global variables such as the scheduler and other such variables '''
-
-from mesa.model import Model
-
-
-class World(Model):
-
-	pass
+class WorldModel(Model):
+	"""
+	This is the mesa model. It will contain all of the information
+	to tell Mesa how to run the model
+	"""
+	
