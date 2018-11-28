@@ -1,0 +1,17 @@
+[
+	{"EID": 7839, "ENAME": "KING", "JOB": "PRESIDENT", "MGR": null, "HIRED": "1981-11-17", "SAL": 5000.00, "COMM": null, "DID": null},
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+	{"EID": , "ENAME":, "JOB": , "MGR": , "HIRED": , "SAL": , "COMM": , "DID": },
+]
