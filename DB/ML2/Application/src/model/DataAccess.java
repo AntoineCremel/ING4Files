@@ -1,8 +1,12 @@
 package model;
 
 import java.sql.Connection;
+import java.sql.DriverManager; // Necessary to make connection to DB
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -91,6 +95,12 @@ public class DataAccess implements AutoCloseable {
   public DataAccess(String url, String login, String password) throws
       DataAccessException {
     // TODO
+    // Open an sql connection using provided url, login and password
+    try {
+        connection = DriverManager.getConnection(url, login, password);
+    } catch (SQLException e) {
+        throw new DataAccessException(e);
+    }
   }
 
   /**
@@ -127,32 +137,80 @@ public class DataAccess implements AutoCloseable {
    */
   public boolean initDataStore(int seatCount, List<Float> priceList)
       throws DataAccessException {
-    String sql = null;
-    // Below is an example showing how to manage table "foo".
-    // You have to tailor the example to your needs.
-    try {
-      // drop existing tables, if any
-      Statement statement = connection.createStatement();
-      try {
-        statement.executeUpdate("drop table foo");
-      } catch (SQLException e) {
-        // likely cause: table does not exists: print error and go on
-        System.err.print("drop table foo: " + e);
-        System.err.println(", going on...");
-      }
-      // ...
-      // create tables
-      sql = "create table foo (bar int)";
-      statement.executeUpdate(sql);
-      // ...
-      // populate tables if needed
-      // ...
-      return true;
-    } catch (SQLException e) {
-      System.err.println(sql + ": " + e);
-      return false;
-    }
+    
     // TODO
+    /*
+    Scheme used for the database :
+    table Bookings
+        seatNumber : int
+        custormerName : String
+        priceCategory : int
+        
+        If customerName is null, then the seat is free to be
+        booked
+        The priceCategories are initiated to -1
+    
+    table priceList
+        ID : int
+        price : float
+    
+        * numeros 0-x are price categories.
+    */
+    String query = null;
+    try {
+        Statement statement = connection.createStatement();
+    
+        // We start by dropping all of the tables to reinit the database
+        try {
+
+            statement.executeUpdate("drop table Bookings");
+            statement.executeUpdate("drop table flightData");
+        } catch (SQLException e) {
+            System.err.print("Failed to drop the tables " + e);
+            System.err.println(", going on...");
+        }
+        // Create the tables
+        // Table Bookings
+        statement.executeUpdate("CREATE TABLE Bookings ("
+                + "seatN int,"
+                + "customer string,"
+                + "priceCategory int )");
+        // Table data
+        statement.executeUpdate("CREATE TABLE priceList("
+                + "ID int"
+                + "price float)");
+        
+        PreparedStatement insertion = connection.prepareStatement(
+            "INSERT INTO priceList (ID, value) VALUES (?, ?)");
+        
+        // Insertion of the number of seats
+        insertion.setInt(1, -1);
+        insertion.setFloat(2, seatCount);
+        insertion.executeQuery();
+        // Insertion of the price categories
+        for(int i=0; i < priceList.size(); i++) {
+            insertion.setInt(1, i);
+            insertion.setFloat(2, priceList.get(i));
+            insertion.executeUpdate();
+        }
+        
+        insertion = connection.prepareStatement(
+            "INSERT INTO Bookings(seatN, customer, priceCategory)"
+                    + "VALUES (?, ?, ?)");
+        // At the start, none of the seats are booked
+        insertion.setString(2, null);
+        insertion.setInt(3, -1);
+        
+        for(int i=1; i <= seatCount; i++) {
+            insertion.setInt(1, i);
+            insertion.executeUpdate();
+        }
+        
+        return true;
+    } catch (SQLException e) {
+        System.err.println(query + ": " + e);
+        return false;
+    }
   }
 
   /**
@@ -167,7 +225,28 @@ public class DataAccess implements AutoCloseable {
    */
   public List<Float> getPriceList() throws DataAccessException {
     // TODO
-    return Collections.EMPTY_LIST;
+    String query = "SELECT * FROM priceList";
+    List<Float> priceList = new ArrayList<>();
+    
+    try {
+        Statement statement = connection.createStatement();
+        try {
+            ResultSet queryResult = statement.executeQuery(query);
+            
+            // Interpretation of the results
+            while(queryResult.next()) {
+                priceList.add(queryResult.getFloat(2));
+            }
+        } catch(SQLException e) {
+            System.err.print("Problem with " + query + ", " + e);
+            return Collections.EMPTY_LIST; // Java equivalent of return false
+                                           // for an empty list
+        }
+    
+        return priceList;
+    } catch(SQLException e) {
+        throw new DataAccessException(e);
+    }
   }
 
   /**
