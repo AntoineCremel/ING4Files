@@ -163,25 +163,25 @@ public class DataAccess implements AutoCloseable {
         // We start by dropping all of the tables to reinit the database
         try {
 
-            statement.executeUpdate("drop table Bookings");
-            statement.executeUpdate("drop table flightData");
+            statement.executeUpdate("drop table Seats;");
+            statement.executeUpdate("drop table priceList;");
         } catch (SQLException e) {
             System.err.print("Failed to drop the tables " + e);
             System.err.println(", going on...");
         }
         // Create the tables
         // Table Bookings
-        statement.executeUpdate("CREATE TABLE Bookings ("
+        statement.executeUpdate("CREATE TABLE Seats ("
                 + "seatN int,"
                 + "customer string,"
-                + "priceCategory int )");
+                + "priceCategory int );");
         // Table data
         statement.executeUpdate("CREATE TABLE priceList("
                 + "ID int"
-                + "price float)");
+                + "price float);");
         
         PreparedStatement insertion = connection.prepareStatement(
-            "INSERT INTO priceList (ID, value) VALUES (?, ?)");
+            "INSERT INTO priceList (ID, value) VALUES (?, ?);");
         
         // Insertion of the number of seats
         insertion.setInt(1, -1);
@@ -195,8 +195,8 @@ public class DataAccess implements AutoCloseable {
         }
         
         insertion = connection.prepareStatement(
-            "INSERT INTO Bookings(seatN, customer, priceCategory)"
-                    + "VALUES (?, ?, ?)");
+            "INSERT INTO Seats(seatN, customer, priceCategory)"
+                    + "VALUES (?, ?, ?);");
         // At the start, none of the seats are booked
         insertion.setString(2, null);
         insertion.setInt(3, -1);
@@ -274,7 +274,37 @@ public class DataAccess implements AutoCloseable {
   public List<Integer> getAvailableSeats(boolean stable) throws
       DataAccessException {
     // TODO
-    return Collections.EMPTY_LIST;
+    /*
+    This is a simple read query with a singular condition.
+    
+    However we need to lock the database if stable is used
+    */
+    String query = "SELECT * FROM Seats WHERE customer = NULL";
+    List<Integer> availableSeats = new ArrayList<>();
+    
+    try {
+        Statement statement = connection.createStatement();
+        
+        try {
+            // Start a transaction if we gave stable
+            if(stable) {
+                connection.setAutoCommit(false);
+            }
+            ResultSet queryResult = statement.executeQuery(query);
+            
+            // We put the result into the output List
+            while(queryResult.next()) {
+                availableSeats.add(queryResult.getInt(1));
+            }
+            
+            return availableSeats;
+        } catch(SQLException e) {
+            System.err.print("Problem with " + query + ", " + e);
+            return Collections.EMPTY_LIST;
+        }
+    } catch(SQLException e) {
+        throw new DataAccessException(e);
+    }
   }
 
   /**
@@ -308,6 +338,14 @@ public class DataAccess implements AutoCloseable {
   public List<Booking> bookSeats(String customer, List<Integer> counts,
       boolean adjoining) throws DataAccessException {
     // TODO
+    /* The first step is to get a list of free seats */
+    List<Integer> availableSeats = getAvailableSeats(true);
+    
+    // We loog for all the seats we want to reserve, and we create bookings
+    // accordingly
+    List<Booking>  bookingMade = generateBookings(availableSeats, adjoining);
+    
+    
     return Collections.EMPTY_LIST;
   }
 
@@ -383,5 +421,14 @@ public class DataAccess implements AutoCloseable {
   public void close() throws DataAccessException {
     // TODO
   }
+  
+    private List<Booking> generateBookings(List<Integer> availableSeats,
+      boolean adjoining) {
+        // Return variable
+        List<Booking> bookingList = new ArrayList<>();
 
+        
+        
+        return bookingList;
+    }
 }
