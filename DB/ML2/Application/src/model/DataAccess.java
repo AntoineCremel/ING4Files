@@ -338,12 +338,9 @@ public class DataAccess implements AutoCloseable {
   public List<Booking> bookSeats(String customer, List<Integer> counts,
       boolean adjoining) throws DataAccessException {
     // TODO
-    /* The first step is to get a list of free seats */
-    List<Integer> availableSeats = getAvailableSeats(true);
-    
     // We loog for all the seats we want to reserve, and we create bookings
     // accordingly
-    List<Booking>  bookingMade = generateBookings(availableSeats, adjoining);
+    List<Booking>  bookingMade = generateBookings(counts, adjoining, customer);
     
     
     return Collections.EMPTY_LIST;
@@ -422,12 +419,51 @@ public class DataAccess implements AutoCloseable {
     // TODO
   }
   
-    private List<Booking> generateBookings(List<Integer> availableSeats,
-      boolean adjoining) {
+    private List<Booking> generateBookings(
+            List<Integer> counts, boolean adjoining, String customer) 
+            throws DataAccessException {
         // Return variable
         List<Booking> bookingList = new ArrayList<>();
-
         
+        // Find the total number of seats we need
+        int total = 0;
+        for(int i : counts) {
+            total += i;
+        }
+        
+        try {
+            /* Get the list of prices */
+            List<Float> priceList = getPriceList();
+            /* Get a list of free seats */
+            List<Integer> availableSeats = getAvailableSeats(true);
+            
+            List<Integer> seatList = new ArrayList<>();
+            for(int available : availableSeats) {
+                // We loop through the possible seats
+                // If we are looking for adjoining seats, we must discard the list
+                // if this new seat is not adjoining
+                if(available > seatList.get(seatList.size()) + 1 && adjoining) {
+                    seatList.clear();
+                }
+                seatList.add(available);
+            }
+            // We check the list is big enough
+            if(seatList.size() < total) {
+                System.err.print("There was not enough seats available to satisfy the demand");
+                System.err.println("Operation aborted ");
+                return Collections.EMPTY_LIST;
+            }
+            
+            // Generate a list of bookings for the seat list that we made
+            int priceCatToUse;
+            for(int i = 0; i < total; i++) {
+                // Find the price category of current seat
+                for(int categ = 0; categ <= i; categ++)
+            }
+            
+        } catch (DataAccessException e) {
+            throw new DataAccessException(e);
+        }
         
         return bookingList;
     }
