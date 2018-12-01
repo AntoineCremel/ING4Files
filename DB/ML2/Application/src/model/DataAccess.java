@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Provides a generic booking application with high-level methods to access its
@@ -166,27 +167,27 @@ public class DataAccess implements AutoCloseable {
             statement.executeUpdate("drop table Seats;");
             statement.executeUpdate("drop table priceList;");
         } catch (SQLException e) {
-            System.err.print("Failed to drop the tables " + e);
+            System.err.print("Failed to drop the tables ");
             System.err.println(", going on...");
         }
         // Create the tables
         // Table Bookings
         statement.executeUpdate("CREATE TABLE Seats ("
-                + "seatN int,"
-                + "customer string,"
+                + "seatN int, "
+                + "customer varchar(255), "
                 + "priceCategory int );");
         // Table data
         statement.executeUpdate("CREATE TABLE priceList("
-                + "ID int"
+                + "ID int, "
                 + "price float);");
         
         PreparedStatement insertion = connection.prepareStatement(
-            "INSERT INTO priceList (ID, value) VALUES (?, ?);");
+            "INSERT INTO priceList (ID, price) VALUES (?, ?);");
         
         // Insertion of the number of seats
         insertion.setInt(1, -1);
         insertion.setFloat(2, seatCount);
-        insertion.executeQuery();
+        insertion.executeUpdate();
         // Insertion of the price categories
         for(int i=0; i < priceList.size(); i++) {
             insertion.setInt(1, i);
@@ -279,7 +280,7 @@ public class DataAccess implements AutoCloseable {
     
     However we need to lock the database if stable is used
     */
-    String query = "SELECT * FROM Seats WHERE customer = NULL";
+    String query = "SELECT * FROM Seats WHERE customer IS NULL";
     List<Integer> availableSeats = new ArrayList<>();
     
     try {
@@ -340,10 +341,32 @@ public class DataAccess implements AutoCloseable {
     // TODO
     // We loog for all the seats we want to reserve, and we create bookings
     // accordingly
-    List<Booking>  bookingMade = generateBookings(counts, adjoining, customer);
+    List<Booking>  bookingsMade = generateBookings(counts, adjoining, customer);
     
-    
-    return Collections.EMPTY_LIST;
+    // Now we just need to modify the database to inlcude the seats reserved this
+    // way
+    try {
+        PreparedStatement update = connection.prepareStatement(
+                "UPDATE Seats "
+                + "SET customer = ?, priceCategory = ?"
+                + "WHERE seatN = ?;");
+        
+        update.setString(1, customer);
+        for(Booking booking : bookingsMade) {
+            update.setInt(2, booking.getCategory());
+            update.setInt(3, booking.getSeat());
+            update.executeUpdate();
+        }
+        
+        // Once we have updated all of the seats, we commit the transaction
+        connection.setAutoCommit(true);
+        
+        return bookingsMade;
+    } 
+    catch(SQLException e) {
+        System.err.print("Problem with seat booking" + ", " + e);
+        return Collections.EMPTY_LIST;
+    }
   }
 
   /**
@@ -366,7 +389,54 @@ public class DataAccess implements AutoCloseable {
   public List<Booking> bookSeats(String customer, List<List<Integer>> seatss)
       throws DataAccessException {
     // TODO
-    return Collections.EMPTY_LIST;
+    // Return value
+    List<Booking> bookedSeats = new ArrayList<>();
+    
+    try {
+        connection.setAutoCommit(false);
+        // We get the list of prices
+        List<Float> priceList = getPriceList();
+       
+        // This statement will only execute if it is on a seat that is empty
+        PreparedStatement update = connection.prepareStatement(
+                "UPDATE Seats "
+                    + "SET customer = ?, priceCategory = ? "
+                    + "WHERE seatN = ? AND customer IS NULL");
+        update.setString(1, customer);
+        // We loop through the list of seats. First loop is categories
+        for(int categ=0; categ < seatss.size(); categ++) {
+            // Second row is seat number
+            for(int seat : seatss.get(categ)) {
+                update.setInt(2, categ);
+                update.setInt(3, seat);
+                if(update.executeUpdate() == 0) {
+                    // If the update didn't affect any seat, it means the seat
+                    // was already taken, and we need to roll back the changes
+                    System.err.println("Seat " + seat + " was already taken.");
+                    System.err.println("Rolling back booking...");
+                    connection.rollback();
+                    connection.setAutoCommit(true);
+                    return Collections.EMPTY_LIST;
+                }
+                
+                Booking booking = new Booking(seat, customer, categ, priceList.get(categ));
+                bookedSeats.add(booking);
+            }
+        }
+        
+        connection.setAutoCommit(true);
+        return bookedSeats;
+    } catch(SQLException e) {
+        System.err.println("Could not finish booking. Aborting...");
+        System.err.println(e);
+        try {
+            connection.rollback();
+            connection.setAutoCommit(true);
+        } catch(SQLException f) {
+            throw new DataAccessException(f);
+        }
+        return Collections.EMPTY_LIST;
+    }
   }
 
   /**
@@ -383,7 +453,41 @@ public class DataAccess implements AutoCloseable {
    */
   public List<Booking> getBookings(String customer) throws DataAccessException {
     // TODO
-    return Collections.EMPTY_LIST;
+    // Return variable
+    List<Booking> bookedSeats = new ArrayList<>();
+    List<Float> priceList = getPriceList();
+    
+    try {
+        // We use a prepared statement to help protect against SQL injections
+        PreparedStatement statement;
+        if(customer != null){
+            statement = connection.prepareStatement(
+                    "SELECT seatN, customer, priceCategory FROM Seats "
+                        + "WHERE customer = ?");
+            
+            statement.setString(1, customer);
+        } else {
+            statement = connection.prepareStatement(
+                    "SELECT seatN, customer, priceCategory FROM Seats "
+                        + "WHERE customer IS NOT NULL");
+        }
+        // Execute the query and gain access to its result
+        ResultSet resultSet = statement.executeQuery();
+        
+        // Loop through the results to add them to our 
+        while(resultSet.next()) {
+            Booking booking = new Booking(resultSet.getInt(1),
+                    resultSet.getString(2), resultSet.getInt(3),
+                    priceList.get(resultSet.getInt(3)));
+            
+            bookedSeats.add(booking);
+        }
+        
+        return bookedSeats;
+    } catch(SQLException e) {
+        System.err.println("Problem with SQL query for bookings");
+        return Collections.EMPTY_LIST;
+    }
   }
 
   /**
@@ -404,7 +508,41 @@ public class DataAccess implements AutoCloseable {
    */
   public boolean cancelBookings(List<Booking> bookings) throws DataAccessException {
     // TODO
-    return false;
+    try {
+        connection.setAutoCommit(false);
+        PreparedStatement statement = connection.prepareStatement(
+                "UPDATE Seats "
+                    + "SET customer = NULL, priceCategory = -1 "
+                    + "WHERE customer = ?");
+        
+        for(Booking booking : bookings) {
+            statement.setString(1, booking.getCustomer());
+            
+            // Make sure the update has an effect
+            if(statement.executeUpdate() == 0) {
+                System.err.println("One of the booking provided is invalid");
+                System.err.println("Rolling back...");
+                connection.rollback();
+                connection.setAutoCommit(true);
+                return false;
+            }
+        }
+        // We finished looping through the list without mistake, so we commit and return
+        connection.setAutoCommit(true);
+        return true;
+        
+    } catch(SQLException e) {
+        System.err.println("Problem while trying to delete bookings.");
+        System.err.println(e);
+        System.err.println("Aborting...");
+        
+        try {
+            connection.setAutoCommit(true);
+        } catch(SQLException f) {
+            throw new DataAccessException(f);
+        }
+        return false;
+    }
   }
 
   /**
@@ -417,6 +555,11 @@ public class DataAccess implements AutoCloseable {
   @Override
   public void close() throws DataAccessException {
     // TODO
+    try {
+        connection.close();
+    } catch(SQLException e) {
+        throw new DataAccessException("Could not properly close the connection " + e);
+    } 
   }
   
     private List<Booking> generateBookings(
@@ -431,39 +574,38 @@ public class DataAccess implements AutoCloseable {
             total += i;
         }
         
-        try {
-            /* Get the list of prices */
-            List<Float> priceList = getPriceList();
-            /* Get a list of free seats */
-            List<Integer> availableSeats = getAvailableSeats(true);
-            
-            List<Integer> seatList = new ArrayList<>();
-            for(int available : availableSeats) {
-                // We loop through the possible seats
-                // If we are looking for adjoining seats, we must discard the list
-                // if this new seat is not adjoining
-                if(available > seatList.get(seatList.size()) + 1 && adjoining) {
-                    seatList.clear();
-                }
-                seatList.add(available);
+        /* Get the list of prices */
+        List<Float> priceList = getPriceList();
+        /* Get a list of free seats */
+        List<Integer> availableSeats = getAvailableSeats(true);
+
+        List<Integer> seatList = new ArrayList<>();
+        for(int available : availableSeats) {
+            // We loop through the possible seats
+            // If we are looking for adjoining seats, we must discard the list
+            // if this new seat is not adjoining
+            if(available > seatList.get(seatList.size()) + 1 && adjoining) {
+                seatList.clear();
             }
-            // We check the list is big enough
-            if(seatList.size() < total) {
-                System.err.print("There was not enough seats available to satisfy the demand");
-                System.err.println("Operation aborted ");
-                return Collections.EMPTY_LIST;
-            }
-            
-            // Generate a list of bookings for the seat list that we made
-            int priceCatToUse;
-            for(int i = 0; i < total; i++) {
-                // Find the price category of current seat
-                for(int categ = 0; categ <= i; categ++)
-            }
-            
-        } catch (DataAccessException e) {
-            throw new DataAccessException(e);
+            seatList.add(available);
         }
+        // We check the list is big enough
+        if(seatList.size() < total) {
+            System.err.print("There was not enough seats available to satisfy the demand");
+            System.err.println("Operation aborted ");
+            return Collections.EMPTY_LIST;
+        }
+
+        // Generate a list of bookings for the seat list that we made
+        ListIterator seat = seatList.listIterator(0);
+        for(int categ = 0; categ < counts.size(); categ++) {
+            for(int i=0; i < counts.get(categ); i++) {
+                Booking booking = new Booking((int)seat.next(), customer, categ, priceList.get(categ));
+                bookingList.add(booking);
+            }
+        }
+            
+        
         
         return bookingList;
     }

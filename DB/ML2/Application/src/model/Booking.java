@@ -195,4 +195,8 @@ public class Booking {
     return true;
   }
 
+    int next() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
+
 }
