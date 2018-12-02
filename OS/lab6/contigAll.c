@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef _MMU_H_
 #define _MMU_H_
@@ -15,6 +16,7 @@ typedef struct hole{
 	int size;
 	// Pointer for linked list
 	struct hole *next;
+	struct hole *prev;
 } hole_t;
 
 typedef struct {
@@ -22,7 +24,7 @@ typedef struct {
 	hole_t * anchor; // List of holes
 } mem_t;
 
-typedef variable{
+typedef struct variable {
 	address_t adr;
 	int size;
 } variable_t;
@@ -60,12 +62,13 @@ int main() {
 }
 
 /// Basic functions
-hole_t * initHole(int size, address_t adr, hole_t * next){
+hole_t * initHole(int size, address_t adr, hole_t * next, hole_t * prev){
 	hole_t * trou = (hole_t*)malloc(sizeof(hole_t));
 
 	trou->size = size;
 	trou->adr = adr;
 	trou->next = next;
+	trou->prev = prev;
 
 	return trou;
 }
@@ -76,7 +79,7 @@ mem_t *initMem(){
 	mem_t * retour = (mem_t*)malloc(sizeof(mem_t));
 
 	// 1 Initialize its contents
-	retour->anchor = initHole(SIZE, 0, NULL);
+	retour->anchor = initHole(SIZE, 0, NULL, NULL);
 
 	return retour;
 }
@@ -84,7 +87,6 @@ mem_t *initMem(){
 address_t myAlloc(mem_t *mem, int size){
 	//0 Variables
 	hole_t * cursor = mem->anchor;
-	hole_t * prec = NULL;
 	address_t retour = -1;
 
 	// 1 Find the first available hole of the right size
@@ -93,7 +95,6 @@ address_t myAlloc(mem_t *mem, int size){
 		if(cursor->size >= size){
 			found = 1;
 		} else {
-			prec = cursor;
 			cursor = cursor->next;
 		}
 	}
@@ -107,7 +108,11 @@ address_t myAlloc(mem_t *mem, int size){
 
 		// 4 If hole is now size 0 we erase it from the linked list
 		if(cursor->size == 0){
-			prec->next = cursor->next;
+			if(cursor->prev) {
+				cursor->prev->next = cursor->next;
+			} else {
+				mem->anchor = cursor->next;
+			}
 			free(cursor);
 		}
 	}
@@ -115,10 +120,75 @@ address_t myAlloc(mem_t *mem, int size){
 	return retour;
 }
 
-void myFree(mem_t *mem, address_t adress, int size){
+void myFree(mem_t *mem, address_t address, int size){
 	// 0 Variables
+	hole_t * cursor = mem->anchor;
+	hole_t * prec = NULL;
+	hole_t * new = NULL;
 
-	// 1 We find the last hole before that address
+	// 1 We find the first hole after that address
+	char found = 0;
+	while(!found && cursor){
+		if(cursor->adr >= address){
+			found = 1;
+		}
+		else{
+			prec = cursor;
+			cursor = cursor->next;
+		}
+	}
 
-	// 2 And extend it
+	// 2 From there, 2 options :
+	// 2.a The cursor is directly after the memory space to free
+	if(found && cursor->adr == address + size){
+		// We can simply extend it
+		cursor->adr -= size;
+		cursor->size += size;
+		// Clean up
+		if(prec){
+			if(prec->adr + prec->size == cursor->adr - 1){
+				prec->size += cursor->size;
+				prec->next = cursor->next;
+				if(cursor->next){
+					cursor->next->prev = prec;
+				}
+				free(cursor);
+			}
+		}
+	}
+	// 2.b There is another variable between the one to free and the cursor
+	// or there wasn't any hole between space to free and end of mem
+	else {
+		// Then we create a new one
+		// Either we have a hole after space to free
+		if(cursor){
+			new = initHole(size, address, cursor, cursor->prev);
+			prec->next = new;
+			cursor->prev = new;
+		}
+		// Or the space to free has no hole after it, so the new we create will be
+		// the end of the list
+		else {
+			new = initHole(size, address, NULL, prec);
+			prec->next = new;
+		}
+		// 2.b.1 Clean up
+		if(prec->adr + prec->size == new->adr - 1){
+			// If prec and new are touching, augment prec and erase new
+			prec->size += new->size;
+			prec->next = new->next;
+			if(new->next){
+				new->next->prev = prec;
+			}
+			free(new);
+		}
+	}	
+}
+
+void myWrite(mem_t *mp, address_t p, byte_t val){
+	mp->mem[p] = val;
+}
+
+byte_t myRead(mem_t *mp, address_t p){
+	return mp->mem[p];
 }

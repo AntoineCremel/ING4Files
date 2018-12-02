@@ -144,7 +144,7 @@ public class DataAccess implements AutoCloseable {
     Scheme used for the database :
     table Bookings
         seatNumber : int
-        custormerName : String
+        customerName : String
         priceCategory : int
         
         If customerName is null, then the seat is free to be
