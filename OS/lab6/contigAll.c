@@ -43,20 +43,29 @@ byte_t myRead(mem_t *mp, address_t p);
 
 int main() {
 	//0 Variables
+	printf("Start of the project \n");
 	mem_t *mem = initMem();
+	printf("InitMem successful\n");
 	address_t adr1 = myAlloc(mem, 5);
 	address_t adr2 = myAlloc(mem, 10);
 	address_t adr3 = myAlloc(mem, 100);
+	printf("Allocations successful\n");
 
 	// Release memory for addresses 1 and 2
 	myFree(mem, adr2, 10);
 	myFree(mem, adr1, 5);
 
+	printf("Memory freeing successful\n");
+
 	myWrite(mem, adr3, 543); // write on the 1st byte
 	myWrite(mem, adr3+9, 34); // write on the 10th byte
 
+	printf("Mem write successful\n");
+
 	byte_t val1 = myRead(mem, adr3);
 	byte_t val2 = myRead(mem, adr3+9);
+
+	printf("Memory read successful\n");
 
 	return 0;
 }
@@ -137,42 +146,57 @@ void myFree(mem_t *mem, address_t address, int size){
 			cursor = cursor->next;
 		}
 	}
+	if(found)
+		printf("myFree : Found hole\n");
 
 	// 2 From there, 2 options :
 	// 2.a The cursor is directly after the memory space to free
-	if(found && cursor->adr == address + size){
-		// We can simply extend it
-		cursor->adr -= size;
-		cursor->size += size;
-		// Clean up
-		if(prec){
-			if(prec->adr + prec->size == cursor->adr - 1){
-				prec->size += cursor->size;
-				prec->next = cursor->next;
-				if(cursor->next){
-					cursor->next->prev = prec;
+	if(cursor){
+		if(found && cursor->adr == address + size){
+			printf("myFree : case a\n");
+			// We can simply extend it
+			cursor->adr -= size;
+			cursor->size += size;
+			// Clean up
+			if(prec){
+				if(prec->adr + prec->size == cursor->adr - 1){
+					prec->size += cursor->size;
+					prec->next = cursor->next;
+					if(cursor->next){
+						cursor->next->prev = prec;
+					}
+					free(cursor);
 				}
-				free(cursor);
 			}
 		}
-	}
-	// 2.b There is another variable between the one to free and the cursor
-	// or there wasn't any hole between space to free and end of mem
-	else {
-		// Then we create a new one
-		// Either we have a hole after space to free
-		if(cursor){
+		// 2.b There is another variable between the one to free and the cursor
+		// or there wasn't any hole between space to free and end of mem
+		else if(found){
+			printf("myFree : case b\n");
+			// Then we create a new one
+			// Either we have a hole after space to free
+			
 			new = initHole(size, address, cursor, cursor->prev);
 			prec->next = new;
 			cursor->prev = new;
+		
+			
+			// 2.b.1 Clean up
+			if(prec->adr + prec->size == new->adr - 1){
+				// If prec and new are touching, augment prec and erase new
+				prec->size += new->size;
+				prec->next = new->next;
+				if(new->next){
+					new->next->prev = prec;
+				}
+				free(new);
+			}
 		}
-		// Or the space to free has no hole after it, so the new we create will be
-		// the end of the list
-		else {
-			new = initHole(size, address, NULL, prec);
-			prec->next = new;
-		}
-		// 2.b.1 Clean up
+	}
+	else if(found){
+		new = initHole(size, address, NULL, prec);
+		prec->next = new;
+
 		if(prec->adr + prec->size == new->adr - 1){
 			// If prec and new are touching, augment prec and erase new
 			prec->size += new->size;
@@ -182,7 +206,7 @@ void myFree(mem_t *mem, address_t address, int size){
 			}
 			free(new);
 		}
-	}	
+	}
 }
 
 void myWrite(mem_t *mp, address_t p, byte_t val){
