@@ -2,9 +2,11 @@ package test;
 
 import java.util.Arrays;
 import static java.util.Arrays.asList;
+import java.util.Collections;
 import java.util.List;
 import model.DataAccess;
 import model.DataAccessException;
+import model.Booking;
 
 /**
  * Program that initializes the data store before running the test programs.
@@ -61,6 +63,29 @@ public class DataStoreInit {
     System.out.print("creating a database with " + seats + " seats...");
     System.out.println("\b\b\b: " + dao.initDataStore(seats, PRICE_LIST));
     System.out.println("available seats: " + dao.getAvailableSeats(false));
+    
+    // Part I added myself for my own tests
+    System.out.println("Book for Bob");
+    List<Booking> bookings1 = dao.bookSeats("Bob", asList(1, 1, 1), true);
+    List<Booking> bookings = dao.getBookings(null);
+    for(Booking booking : bookings) {
+        System.out.println(booking.toString());
+    }
+    System.out.println("Test with Jacques");
+    bookings = dao.bookSeats("Jaques", asList(Collections.EMPTY_LIST, asList(4)));
+    bookings = dao.getBookings(null);
+    for(Booking booking : bookings) {
+        System.out.println(booking.toString());
+    }
+    System.out.println("Cancel bookings ");
+    boolean cancelled = dao.cancelBookings(bookings1);
+    if(cancelled)
+        System.out.println("Cancelation effective");
+    bookings = dao.getBookings(null);
+    for(Booking booking : bookings) {
+        System.out.println(booking.toString());
+    }
+    
 
     // close dao
     dao.close();

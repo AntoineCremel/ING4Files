@@ -183,11 +183,7 @@ public class DataAccess implements AutoCloseable {
         
         PreparedStatement insertion = connection.prepareStatement(
             "INSERT INTO priceList (ID, price) VALUES (?, ?);");
-        
-        // Insertion of the number of seats
-        insertion.setInt(1, -1);
-        insertion.setFloat(2, seatCount);
-        insertion.executeUpdate();
+     
         // Insertion of the price categories
         for(int i=0; i < priceList.size(); i++) {
             insertion.setInt(1, i);
@@ -196,7 +192,7 @@ public class DataAccess implements AutoCloseable {
         }
         
         insertion = connection.prepareStatement(
-            "INSERT INTO Seats(seatN, customer, priceCategory)"
+            "INSERT INTO Seats(seatN, customer, priceCategory) "
                     + "VALUES (?, ?, ?);");
         // At the start, none of the seats are booked
         insertion.setString(2, null);
@@ -348,7 +344,7 @@ public class DataAccess implements AutoCloseable {
     try {
         PreparedStatement update = connection.prepareStatement(
                 "UPDATE Seats "
-                + "SET customer = ?, priceCategory = ?"
+                + "SET customer = ?, priceCategory = ? "
                 + "WHERE seatN = ?;");
         
         update.setString(1, customer);
@@ -396,6 +392,8 @@ public class DataAccess implements AutoCloseable {
         connection.setAutoCommit(false);
         // We get the list of prices
         List<Float> priceList = getPriceList();
+        
+        int updateResult;
        
         // This statement will only execute if it is on a seat that is empty
         PreparedStatement update = connection.prepareStatement(
@@ -513,10 +511,11 @@ public class DataAccess implements AutoCloseable {
         PreparedStatement statement = connection.prepareStatement(
                 "UPDATE Seats "
                     + "SET customer = NULL, priceCategory = -1 "
-                    + "WHERE customer = ?");
+                    + "WHERE customer = ? AND seatN = ?");
         
         for(Booking booking : bookings) {
             statement.setString(1, booking.getCustomer());
+            statement.setInt(2, booking.getSeat());
             
             // Make sure the update has an effect
             if(statement.executeUpdate() == 0) {
@@ -576,6 +575,10 @@ public class DataAccess implements AutoCloseable {
         
         /* Get the list of prices */
         List<Float> priceList = getPriceList();
+        System.out.print("List of prices : ");
+        for(Float price : priceList) {
+            System.out.print(price + " ");
+        }
         /* Get a list of free seats */
         List<Integer> availableSeats = getAvailableSeats(true);
 
@@ -584,8 +587,10 @@ public class DataAccess implements AutoCloseable {
             // We loop through the possible seats
             // If we are looking for adjoining seats, we must discard the list
             // if this new seat is not adjoining
-            if(available > seatList.get(seatList.size()) + 1 && adjoining) {
+            if(seatList.size() >= 1){
+                if(available > seatList.get(seatList.size() - 1) + 1 && adjoining) {
                 seatList.clear();
+                }
             }
             seatList.add(available);
         }
