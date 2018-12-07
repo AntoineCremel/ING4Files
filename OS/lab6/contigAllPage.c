@@ -95,28 +95,38 @@ mem_t * createPage(pageSystem_t * ps, int i);
 int main() {
 	//0 Variables
 	byte_t toWrite[1] = {1};
+	byte_t toWrite2[2] = {4, 5};
 	printf("Start of the program \n");
 	pageSystem_t * ps = initPageSystem();
 
 	printf("Initialization successful\n");
 	variable_t * v1 = allocateVariable(ps, 1);
-	variable_t * v2 = allocateVariable(ps, 120);
+	variable_t * v2 = allocateVariable(ps, 127);
 	variable_t * v3 = allocateVariable(ps, 40);
+	variable_t * v4 = allocateVariable(ps, 2);
 	printf("Allocations successful\n");
 	if(!v1)
 		printf("V1 is null\n");
-	printf("V1 : %i\t%i\t%i\n", v1->adr, v1->size, v1->page);
+	printf("v1 : addresse : %i\tpage : %i\tsize : %i\n", v1->adr, v1->page, v1->size);
+	printf("v2 : addresse : %i\tpage : %i\tsize : %i\n", v2->adr, v2->page, v2->size);
+	printf("v3 : addresse : %i\tpage : %i\tsize : %i\n", v3->adr, v3->page, v3->size);
+	printf("v4 : addresse : %i\tpage : %i\tsize : %i\n", v4->adr, v4->page, v4->size);
 	// Write into v1
 	writeVariable(ps, toWrite, *v1);
+	writeVariable(ps, toWrite2, *v2);
 
 	// Read v1
-	printf("v1 == %i\n", *readVariable(ps, *v1));
+	printf("v1 == %i\n", readVariable(ps, *v1)[0]);
+	printf("v2 == %i, %i\n", readVariable(ps, *v2)[0], readVariable(ps, *v2)[1]);
 
 	// Free variable
 	freeMemory(ps, v1);
 
 	// Read v1
-	printf("v1 == %i\n", *readVariable(ps, *v1));
+	if(!readVariable(ps, *v1))
+		printf("V1 is not allocated\n");
+	else
+		printf("v1 == %i\n", readVariable(ps, *v1)[0]);
 
 	return 0;
 }
@@ -148,6 +158,7 @@ variable_t * allocateVariable(pageSystem_t * ps, int size) {
 		if(page){
 			adr = myAlloc(page, size);
 			if(adr != -1) {
+				printf("Placed variable on page %i\n", i);
 				// If adr is not -1, then myAlloc managed to find a page, and we can proceed
 				break;
 			}
@@ -188,7 +199,7 @@ void freeMemory(pageSystem_t * ps, variable_t * variable) {
 
 byte_t * readVariable(pageSystem_t * ps, variable_t variable) {
 	// 0 Variables
-	byte_t * returnVariable = (byte_t*)malloc(sizeof(variable.size));
+	byte_t * returnVariable = (byte_t*)malloc(variable.size * sizeof(byte_t));
 	int i;
 
 	// If the variable is not allocated, exit
@@ -197,7 +208,7 @@ byte_t * readVariable(pageSystem_t * ps, variable_t variable) {
 	// 1 We fill the return variable with what we find in physical memory
 	for(i = 0; i < variable.size; i++) {
 		returnVariable[i] = ps->physicalMemory
-			[variable.page * PAGE_SIZE + variable.adr + i];
+			[ps->table.physical[variable.page] * PAGE_SIZE + variable.adr + i];
 	}
 
 	return returnVariable;
@@ -207,7 +218,7 @@ void writeVariable(pageSystem_t * ps, byte_t * toWrite, variable_t variable) {
 	int i;
 
 	for(i = 0; i < variable.size; i++) {
-		ps->physicalMemory[variable.page*PAGE_SIZE + variable.adr+ i]
+		ps->physicalMemory[ps->table.physical[variable.page]*PAGE_SIZE + variable.adr+ i]
 			= toWrite[i];
 	}
 }
@@ -230,7 +241,7 @@ mem_t * initMem(){
 	mem_t * retour = (mem_t*)malloc(sizeof(mem_t));
 
 	// 1 Initialize its contents
-	retour->anchor = initHole(SIZE, 0, NULL, NULL);
+	retour->anchor = initHole(PAGE_SIZE, 0, NULL, NULL);
 
 	return retour;
 }
