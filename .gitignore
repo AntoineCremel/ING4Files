@@ -1,3 +1,4 @@
 PPE/abm/*
 PPE/CryptoBankRatesModel/*
 /DB/ML2/Application/build/*.ova
+*.ipynb_checkpoints*
